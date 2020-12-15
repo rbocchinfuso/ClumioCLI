@@ -1,0 +1,24 @@
+;config.ini.example
+;copy this file to config.ini and modify variables
+
+[local]
+
+[vcenter]
+;replace with you vcenter id
+id = 00
+
+[api]
+base_url = https://us-east-1.api.clumio.com
+limit = 10
+accept_header = application/api.clumio.*=v1+json
+content_type_header = application/json
+;enter your Clumio Bearer Token below
+bearer_token_header = Bearer REPLACE_ME
+
+[backup_groups]
+test =  ['Test-Ubuntu1804-VM01']
+foo1 = ['foo1','bar1','foobar1']
+foo2 = ['foo2','bar2','foobar2']
+foo3 = ['foo3','bar3','foobar3']
+
+
