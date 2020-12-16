@@ -56,6 +56,13 @@ __email__ = 'rbocchinfuso@gmail.com'
 __status__ = 'Dev'
 
 
+def log(message):
+    console = Console(width=220)
+    style = "yellow"
+    if DEBUG == "True":
+        console.log(Panel(str(message), title="DEBUG OUTPUT", style=style))
+              
+
 def vm_table(data):
     # print json data as table
     paths = [
@@ -75,13 +82,13 @@ def vm_table(data):
     converter.set_paths(paths)
     # input a JSON to be interpreted
     table = (converter.convert_json(data))
-#     print (table)
-#     print (tabulate(table, headers="firstrow", tablefmt="grid"))
-    return (table)
+    log(table)
+    log(tabulate(table, headers="firstrow", tablefmt="grid"))
+    return(table)
 
 
 def vc_table(data):
-    # print json data as table
+    # json data as table
     paths = [
                 {"$._embedded.items.id":"id"},
                 {"$._embedded.items.type":"type"},
@@ -98,12 +105,13 @@ def vc_table(data):
     converter.set_paths(paths)
     # input a JSON to be interpreted
     table = (converter.convert_json(data))
-#     print (table)
-    print (tabulate(table, headers="firstrow", tablefmt="grid"))
-    return (table)
+    log(table)
+    print(tabulate(table, headers="firstrow", tablefmt="grid"))
+    return(table)
 
 
 def my_df(alldf,table,i):
+      ## write json to file
 #     with open('vms.json', 'w') as f:
 #         print(s, file=f)    
     if i == 1:
@@ -112,45 +120,45 @@ def my_df(alldf,table,i):
         new_header = df.iloc[0] #grab the first row for the header
         df = df[1:] #take the data less the header row
         df.columns = new_header #set the header row as the df header
-#         print (df)
+        log(df)
         alldf = pd.concat([alldf,df])
-#         print (df.to_string(index=False))
+        log(df.to_string(index=False))
     else:
         d = numpy.array(table)
         df = pd.DataFrame(d)
         new_header = df.iloc[0] #grab the first row for the header
         df = df[1:] #take the data less the header row
         df.columns = new_header #set the header row as the df header
-#         print (df)
+        log(df)
         alldf = pd.concat([alldf,df])
-#         print (alldf.to_string(index=False))    
-    return (alldf)
+        log(alldf.to_string(index=False))    
+    return(alldf)
         
 
 def get_pages(data):
     ## get page count
     total_pages_count = parse('$.total_pages_count')
     pages = (total_pages_count.find(data)[0].value)
-#     print (pages)   
-    return (pages)
+    log(pages)   
+    return(pages)
 
     
 def my_request(base_url,api_path,headers,params):
     response = requests.request('GET', base_url + api_path, headers=headers, params = params)
 
     my_bytes_value = response.text.encode('utf8')
-    # print (my_bytes_value)
+    log(my_bytes_value)
 
-    # Decode UTF-8 bytes to Unicode, and convert single quotes 
-    # to double quotes to make it valid JSON
+    ## Decode UTF-8 bytes to Unicode, and convert single quotes 
+    ## to double quotes to make it valid JSON
     my_json = my_bytes_value.decode('utf8').replace("'", '"')
-    # print(my_json)
-    # print('- ' * 20)
+    log(my_json)
+    log('- ' * 20)
 
-    # Load the JSON to a Python list & dump it back out as formatted JSON
+    ## Load the JSON to a Python list & dump it back out as formatted JSON
     data = json.loads(my_json)
     s = json.dumps(data, indent=4)
-#     print(s)
+    log(s)
     return(data)
 
 def headers_func():
@@ -172,16 +180,16 @@ def start_backup(group):
     print(df)
     vm_list = ast.literal_eval(config.get("backup_groups", group))
     rprint(Panel('[green]START: Attempting to Start on-demand backup for group ' + group + ' via Clumio API', title="EXECUTION STATUS"))
-#     print(type(vm_list))
-#     print(vm_list)
+    log(type(vm_list))
+    log(vm_list)
     for vm in vm_list:
         print (Fore.CYAN + Style.BRIGHT + 'Starting backup on-demand backup for: ' + vm + Style.RESET_ALL)
         for index, row in df.iterrows():
             if (row['vm_name'] == vm):       
-#                 vmName = (row['vm_name'])
-#                 print ('VM Name: ' + vmName)
-#                 ID = (row['id'])
-#                 print ('VM ID: ' + ID)
+                vmName = (row['vm_name'])
+                log ('VM Name: ' + vmName)
+                ID = (row['id'])
+                log ('VM ID: ' + ID)
                 data = {'vcenter_id': vcenter_id, 'vm_id': ID}
                 payload = json.dumps(data)
                 response = requests.request('POST', url, headers=headers, data=payload)
@@ -218,15 +226,15 @@ def get_vms():
     rprint(Panel('[cyan]START: Fething and Building VM List via Clumio API', title="EXECUTION STATUS"))
     i = 1
     for i in track(range(1, int(pages))):
-        print (Fore.CYAN + Style.BRIGHT + '...Fetching page ' + str(i) + ' from Clumio API...' + Style.RESET_ALL)
+        print(Fore.CYAN + Style.BRIGHT + '...Fetching page ' + str(i) + ' from Clumio API...' + Style.RESET_ALL)
         get_vm_api_path = ('/datasources/vmware/vcenters/' + vcenter_id + '/vms?limit=' + limit + '&start=' + str(i))
-#         print (get_vm_api_path)
+        log(get_vm_api_path)
         data = my_request(base_url,get_vm_api_path,headers,params)
         table = vm_table(data)
         alldf = my_df (alldf,table,i)
     rprint(Panel('[green]DONE: Fething VM List via Clumio API', title="EXECUTION STATUS"))
     rprint(Panel('[cyan]START: Create DataFrame', title="EXECUTION STATUS"))
-    print (alldf)
+    print(alldf)
     rprint(Panel('[cyan]START: Writing DataFrame to vms.csv for future use', title="EXECUTION STATUS"))
     alldf.to_csv('vms.csv', index=False)
     rprint(Panel('[green]DONE: Writing DataFrame to vms.csv', title="EXECUTION STATUS"))
@@ -258,6 +266,8 @@ if __name__ == '__main__':
     config = configparser.ConfigParser()
     config.read('config.ini')
     config.sections()
+    DEBUG = config['local']['DEBUG']
+    log(DEBUG)
     
     arguments = docopt(__doc__, version='Python CLI wrapper for the Clumio API - v0.1.0')
     if arguments['getvcs']:

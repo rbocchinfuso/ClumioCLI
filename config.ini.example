@@ -2,6 +2,7 @@
 ;copy this file to config.ini and modify variables
 
 [local]
+DEBUG = True
 
 [vcenter]
 ;replace with you vcenter id
