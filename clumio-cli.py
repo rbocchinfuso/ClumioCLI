@@ -23,7 +23,7 @@ Commands:
   getvms                Query and build VM List via Clumio API.
   backup <group>        Initiate Clumio on-demand backup for VMs in group.
   groups                List group KEY : VALUE (group : vm list) pairs.
-  config                List all config KEY : VALUE.
+  config                List all config KEY : VALUE pairs.
 '''
 
 # Generic/Built-in
@@ -153,17 +153,21 @@ def my_request(base_url,api_path,headers,params):
 #     print(s)
     return(data)
 
+def headers_func():
+    headers = {
+      'Accept': config['api']['accept_header'],
+      'Content-Type':config['api']['content_type_header'],
+      'Authorization': config['api']['bearer_token_header']
+    }
+    return(headers)
+
 
 def start_backup(group):
     vcenter_id = config['vcenter']['id']
     base_url = config['api']['base_url']
     backup_api_path = '/backups/vmware/vms'
     url = (base_url + backup_api_path)
-    headers = {
-      'Accept': config['api']['accept_header'],
-      'Content-Type':config['api']['content_type_header'],
-      'Authorization': config['api']['bearer_token_header']
-    }
+    headers = headers_func()
     df = pd.read_csv ('vms.csv')
     print(df)
     vm_list = ast.literal_eval(config.get("backup_groups", group))
@@ -190,11 +194,7 @@ def get_vcs():
     base_url = config['api']['base_url']
     get_vc_api_path = '/datasources/vmware/vcenters'
     params = {'limit': limit}
-    headers = {
-      'Accept': config['api']['accept_header'],
-      'Content-Type':config['api']['content_type_header'],
-      'Authorization': config['api']['bearer_token_header']
-    }
+    headers = headers_func()
     data = my_request(base_url,get_vc_api_path,headers,params)
     pages = get_pages(data)
     table = vc_table(data)
@@ -208,11 +208,7 @@ def get_vms():
 
     # params = {'limit': '<limit>', 'start': '<start>', 'filter': '<filter>'}
     params = {'limit': limit}
-    headers = {
-      'Accept': config['api']['accept_header'],
-      'Content-Type':config['api']['content_type_header'],
-      'Authorization': config['api']['bearer_token_header']
-    }
+    headers = headers_func()
 
     data = my_request(base_url,get_vm_api_path,headers,params)
     pages = get_pages(data)
